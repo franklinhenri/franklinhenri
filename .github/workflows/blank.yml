@@ -1,0 +1,42 @@
+name: GitHub-Profile-3D-Contrib
+
+on:
+  schedule:
+    - cron: "0 18 * * *"  # 03:00 JST / 18:00 UTC
+  workflow_dispatch:
+
+permissions:
+  contents: write  # Permissão para fazer push
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    name: generate-github-profile-3d-contrib
+    steps:
+      # Passo 1: Checkout com histórico completo
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # Baixa todo o histórico para evitar conflitos
+
+      # Passo 2: Gerar o perfil 3D
+      - uses: yoshi389111/github-profile-3d-contrib@latest
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}  # Usa o token automático do GitHub
+          USERNAME: ${{ github.repository_owner }}
+
+      # Passo 3: Fazer commit e push com sincronização
+      - name: Commit & Push
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          
+          git add -A .
+          
+          # Tenta fazer commit (só executa se houver mudanças)
+          if git commit -m "Update 3D profile"; then
+            # Sincroniza com o remoto antes do push
+            git pull --rebase origin main
+            git push origin main
+          else
+            echo "Nenhuma mudança para commit."
+          fi
